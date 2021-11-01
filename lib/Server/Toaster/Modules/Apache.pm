@@ -1,4 +1,4 @@
-package Server::Toaster;
+package Server::Toaster::Modules::Apache;
 
 use 5.006;
 use strict;
@@ -8,7 +8,7 @@ use File::ShareDir ':ALL';
 
 =head1 NAME
 
-Server::Toaster - Helper for generating templated config files for servers.
+Server::Toaster::Modules::Apache - Apache helper for Server::Toaster
 
 =head1 VERSION
 
@@ -24,7 +24,7 @@ Quick summary of what the module does.
 
 Perhaps a little code snippet.
 
-    use Server::Toaster;
+    use Server::Toaster::Modules::Apache;
     
     my $st = Server::Toaster->new();
     
@@ -99,33 +99,21 @@ sub fill_in {
 
 Fetches a list of templates a module uses.
 
-As long as the specified module exists, this should never die.
-
 The returned value is a hash with the keys being the template names
 and the value being the full path to the file.
-
-One value is required and that is the name of the module, relevant to
-Sever::Toaster::Modules. So 'Sever::Toaster::Modules::Apache' becomes
-'Apache';
 
 =cut
 
 sub get_files {
-	my ( $blank, $module ) = @_;
+	my ( $self ) = @_;
 
-	# make sure we have a module defined
-	if ( !defined($module) ) {
-		die 'No module specified';
-	}
+	my $dir=dist_dir('Server-Toaster');
+	
+	my %returned=(
+				  'Apache/domain.tt'=>$dir.'/Apache/domain.tt',
+				  'Apache/httpd.conf.tt'=>$dir.'/Apache/httpd.conf.tt',
+				  );
 
-	my %returned;
-	my $to_eval
-		= 'use Server::Toaster::Modules::'
-		. $module
-		. '; %returned=Server::Toaster::Modules::'
-		. $module
-		. '->get_files;';
-	eval( $to_eval );
 
 	return %returned;
 }

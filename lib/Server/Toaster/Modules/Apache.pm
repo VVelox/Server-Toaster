@@ -91,7 +91,9 @@ sub new {
 =cut
 
 sub fill_in {
-	my ( $blank, $module, $hostname, $info ) = @_;
+	my ( $self, %opts ) = @_;
+
+	
 
 }
 
@@ -112,6 +114,7 @@ sub get_files {
 	my %returned=(
 				  'Apache/domain.tt'=>$dir.'/Apache/domain.tt',
 				  'Apache/httpd.conf.tt'=>$dir.'/Apache/httpd.conf.tt',
+				  'Apache/doc_root.conf.tt'=>$dir.'/Apache/doc_root.conf.tt',
 				  );
 
 

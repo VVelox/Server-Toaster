@@ -88,10 +88,22 @@ sub new {
 
 =head2 fill_in
 
+This filles in the templates for the specified module.
+
+The required values are as below.
+
+    module - The module to process the templates for.
+    
+    hostname - The hostname of the system being processed.
+    
+    config - The config hash ref for the use with filling the templates.
+
+This will die upon error.
+
 =cut
 
 sub fill_in {
-	my ( $blank, $module, $hostname, $info ) = @_;
+	my ( $blank, %opts ) = @_;
 
 }
 
@@ -103,7 +115,7 @@ As long as the specified module exists, this should never die.
 
 The returned value is a hash with the keys being the template names
 and the value being the full path to the file.
-
+sq
 One value is required and that is the name of the module, relevant to
 Sever::Toaster::Modules. So 'Sever::Toaster::Modules::Apache' becomes
 'Apache';

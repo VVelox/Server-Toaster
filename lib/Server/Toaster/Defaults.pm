@@ -1,4 +1,4 @@
-package Server::Toaster;
+package Server::Toaster::Defaults;
 
 use 5.006;
 use strict;
@@ -20,17 +20,24 @@ our $VERSION = '0.0.1';
 
     use Server::Toaster::Defaults;
     use Data::Dumper;
+    
+    my %defaults=Server::Toaster::Defaults->get;
+    
+    print Dumper \%defaults;
 
-    print Dumper Server::Toaster::Defaults->get;
 
 =head1 METHODS
 
 =head2 get
 
+Gets the defaults.
+
+    my %defaults=Server::Toaster::Defaults->get;
+
 =cut
 
 sub get {
-	my $self = {
+	my %defaults = (
 		ssl_ciphers =>
 			'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384',
 		ssl_min_protocol       => 'TLSv1.2',
@@ -41,12 +48,13 @@ sub get {
 		server_admin_name      => 'Who Ever',
 		ssl_cert_path          => '/usr/local/etc/letsencrypt/live/%%%DOMAN%%%/',
 		Apache                 => {
-			listen                 => [ '80', '443' ],
+			listen                 => [],
 			http_port              => '80',
 			https_port             => '443',
 			server_root            => '/usr/local',
 			default_https_redirect => '0',
 			enable_https           => '0',
+			include_optional       => 1,
 			ssl_stapling           => '1',
 			ssl_stapling_cache     => 'shmcb:logs/ssl_stapling(32768)',
 			modules                => {
@@ -147,8 +155,8 @@ sub get {
 			modules_d => 1,
 			user      => 'www',
 			group     => 'www',
-								   doc_root  => '/usr/local/www/apache24/data',
-								   cgi=>0,
+			doc_root  => '/usr/local/www/apache24/data',
+			cgi       => 0,
 			mpm_event => {
 				StartServers           => 3,
 				MinSpareThreads        => 75,
@@ -174,10 +182,9 @@ sub get {
 
 			}
 		}
-	};
-	bless $self;
+	);
 
-	return $self;
+	return %defaults;
 }
 
 =head1 AUTHOR

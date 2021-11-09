@@ -1,15 +1,15 @@
-package Server::Toaster;
+package Server::Toaster::Modules::Base;
 
 use 5.006;
 use strict;
 use warnings;
-use File::ShareDir ':ALL';
-use Hash::Merge;
+use Template;
 use Server::Toaster::Defaults;
+use File::ShareDir ':ALL';
 
 =head1 NAME
 
-Server::Toaster - Helper for generating templated config files for servers.
+Server::Toaster::Modules::Apache - Apache helper for Server::Toaster
 
 =head1 VERSION
 
@@ -25,7 +25,7 @@ Quick summary of what the module does.
 
 Perhaps a little code snippet.
 
-    use Server::Toaster;
+    use Server::Toaster::Modules::Apache;
     
     my $st = Server::Toaster->new();
     
@@ -38,7 +38,7 @@ Perhaps a little code snippet.
 This initiates the module.
 
     dir - The base dir to use. If not spoecified,
-          'stoaster' is ued.
+          'stoaster' is used.
     
     output - The output dir to use. If not specified,
              $dir.'/output' is used.
@@ -79,8 +79,7 @@ sub new {
 	my $self = {
 		dir       => $opts{dir},
 		output    => $opts{output},
-				templates => $opts{templates},
-				defaults=>Server::Toaster::Defaults->get,
+		templates => $opts{templates},
 		share     => dist_dir('Server-Toaster'),
 	};
 	bless $self;
@@ -90,14 +89,10 @@ sub new {
 
 =head2 fill_in
 
-This filles in the templates for the specified module.
+This filles in the templates.
 
 The required values are as below.
 
-    module - The module to process the templates for. This is relevant to
-             Sever::Toaster::Modules. So 'Sever::Toaster::Modules::Apache'
-             becomes 'Apache';
-    
     hostname - The hostname of the system being processed.
     
     config - The config hash ref for the use with filling the templates.
@@ -109,11 +104,6 @@ This will die upon error.
 sub fill_in {
 	my ( $self, %opts ) = @_;
 
-	# make sure we have a module specified
-	if (!defined( $opts{module} )) {
-		die( 'No module defined' );
-	}
-
 	# make sure we have a hostname
 	if (!defined( $opts{hostname} )) {
 		die( 'No hostname defined' );
@@ -124,24 +114,11 @@ sub fill_in {
 		die( 'No config defined' );
 	}
 
-	# do a very basic check to make sure we have something that appears to atleast be sane
-	# for the name of the module
-	if ($opts{module}!~/^[A-Za-z0-9\_\:]+$/) {
-		die('"'.$opts{module}.'" does not appear to be a valid module name');
-	}
-
-	my $merger=Hash::Merge->new('LEFT_PRECEDENT');
-
-	my $config=$merger->merge( $opts{config}, $self->{defaults} );
-
-	my $to_eval='use  Server::Toaster::Modules::'.$opts{module}.'; '.
-	'my $st_module=Server::Toaster::Modules::'.$opts{module}.'->new(',
-	'dir=>$self->{dir}, '.
-	'output=>$self->{output}, '.
-	'templates=>$self->{templates} );'.
-	'$st_module->fill_in(%opts);';
-
-	
+	my $vars={
+			  hostname=>$opts{hostname},
+			  d=>Server::Toaster::Defaults->get,
+			  c=>%opts{config},
+			  }
 
 }
 
@@ -149,33 +126,21 @@ sub fill_in {
 
 Fetches a list of templates a module uses.
 
-As long as the specified module exists, this should never die.
-
 The returned value is a hash with the keys being the template names
 and the value being the full path to the file.
-
-One value is required and that is the name of the module, relevant to
-Sever::Toaster::Modules. So 'Sever::Toaster::Modules::Apache' becomes
-'Apache';
 
 =cut
 
 sub get_files {
-	my ( $blank, $module ) = @_;
+	my ( $self ) = @_;
 
-	# make sure we have a module defined
-	if ( !defined($module) ) {
-		die 'No module specified';
-	}
-
-	my %returned;
-	my $to_eval
-		= 'use Server::Toaster::Modules::'
-		. $module
-		. '; %returned=Server::Toaster::Modules::'
-		. $module
-		. '->get_files;';
-	eval( $to_eval );
+	my $dir=dist_dir('Server-Toaster');
+	
+	my %returned=(
+				  'Apache/domain.tt'=>$dir.'/Apache/domain.tt',
+				  'Apache/httpd.conf.tt'=>$dir.'/Apache/httpd.conf.tt',
+				  'Apache/doc_root.conf.tt'=>$dir.'/Apache/doc_root.conf.tt',
+				  );
 
 	return %returned;
 }

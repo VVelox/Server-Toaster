@@ -3,8 +3,7 @@ package Server::Toaster::Modules::Apache;
 use 5.006;
 use strict;
 use warnings;
-use Template;
-use File::ShareDir ':ALL';
+use base 'Server::Toaster::Modules::Base';
 
 =head1 NAME
 
@@ -32,68 +31,38 @@ Perhaps a little code snippet.
 
 =head1 METHODS
 
-=head2 new
-
-This initiates the module.
-
-    dir - The base dir to use. If not spoecified,
-          'stoaster' is ued.
-    
-    output - The output dir to use. If not specified,
-             $dir.'/output' is used.
-    
-    templates - The template dir to use. If not specified,
-                $dir.'/templates' is used.
-
-$templates and $output will be created as needed, but $dir must
-exist upon module init or it will die.
-
-
-=cut
-
-sub new {
-	my ( $blank, %opts ) = @_;
-
-	# set the default dir if non is specified
-	if ( !defined( $opts{dir} ) ) {
-		$opts{dir} = 'stoaster';
-	}
-
-	# die if the base dir is not a directory or does not exist
-	if ( !-d $opts{dir} ) {
-		die '"' . $opts{dir} . '" does not exist or is not a directory';
-	}
-
-	# set the default output dir if non is specified
-	if ( !defined( $opts{output} ) ) {
-		$opts{output} = $opts{dir} . '/output';
-	}
-
-	# set the default template dir if non is specified
-	if ( !defined( $opts{templates} ) ) {
-		$opts{templates} = $opts{dir} . '/templates';
-	}
-
-	# init the object
-	my $self = {
-		dir       => $opts{dir},
-		output    => $opts{output},
-		templates => $opts{templates},
-		share     => dist_dir('Server-Toaster'),
-	};
-	bless $self;
-
-	return $self;
-}
-
 =head2 fill_in
+
+This filles in the templates.
+
+The required values are as below.
+
+    hostname - The hostname of the system being processed.
+    
+    config - The config hash ref for the use with filling the templates.
+
+This will die upon error.
 
 =cut
 
 sub fill_in {
 	my ( $self, %opts ) = @_;
 
-	
+	# make sure we have a hostname
+	if (!defined( $opts{hostname} )) {
+		die( 'No hostname defined' );
+	}
+
+	# make sure we have a config to use
+	if (!defined( $opts{config} )) {
+		die( 'No config defined' );
+	}
+
+	my $vars={
+			  hostname=>$opts{hostname},
+			  d=>Server::Toaster::Defaults->get,
+			  c=>%opts{config},
+			  }
 
 }
 
@@ -116,7 +85,6 @@ sub get_files {
 				  'Apache/httpd.conf.tt'=>$dir.'/Apache/httpd.conf.tt',
 				  'Apache/doc_root.conf.tt'=>$dir.'/Apache/doc_root.conf.tt',
 				  );
-
 
 	return %returned;
 }

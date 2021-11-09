@@ -23,8 +23,18 @@ my %WriteMakefileArgs = (
 		'Template::Plugin::JSON' => '0.08',
 		'File::ShareDir'         => '0',
 	},
-	dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-	clean => { FILES    => 'Server-Toaster-*' },
+	dist       => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+	clean      => { FILES    => 'Server-Toaster-*' },
+	META_MERGE => {
+		"meta-spec" => { version => 2 },
+		resources   => {
+			repository => {
+				type => 'git',
+				url  => 'git@github.com:VVelox/Server-Toaster.git',
+				web  => 'https://github.com/VVelox/Server-Toaster',
+			},
+		},
+	},
 );
 
 # Compatibility with old versions of ExtUtils::MakeMaker

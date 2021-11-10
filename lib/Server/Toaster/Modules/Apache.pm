@@ -76,10 +76,7 @@ and the value being the full path to the file.
 =cut
 
 sub get_files_module {
-	return (
-			'Apache/domain.tt',
-			'Apache/httpd.conf.tt'
-			);
+	return ( 'Apache/domain.tt', 'Apache/httpd.conf.tt' );
 }
 
 =head1 AUTHOR

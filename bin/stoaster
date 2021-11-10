@@ -17,13 +17,20 @@ my $templates_dir;
 my $output_dir;
 my $module;
 my $action;
+my $template;
 GetOptions(
 	's=s' => \$stoaster_dir,
-	't=s' => \$templates_dir,
+	'T=s' => \$templates_dir,
 	'o=s' => \$output_dir,
 	'm=s' => \$module,
 	'a=s' => \$action,
+	't=s' => \$template,
 );
+
+# make sure we have an action
+if ( !defined($action) ) {
+	die 'Np action defined via -a';
+}
 
 my $stoaster = Server::Toaster->new(
 	dir       => $stoaster_dir,
@@ -31,7 +38,27 @@ my $stoaster = Server::Toaster->new(
 	output    => $output_dir,
 );
 
-if ($action eq 'get_files') {
-	my %returned=$stoaster->get_files($module);
-	print Dumper( \%returned );
+if ( $action eq 'get_files' ) {
+	my %returned = $stoaster->get_files($module);
+
+	foreach my $template ( keys(%returned) ) {
+		print $template
+			. "\n      use => "
+			. $returned{$template}{use}
+			. "\n    share => "
+			. $returned{$template}{share} . "\n\n";
+	}
+
+	exit 0;
 }
+
+if ( $action eq 'get_template' ) {
+	my $template_data = $stoaster->get_template( $module, $template );
+
+	print $template_data;
+
+	exit 0;
+}
+
+# no action defined
+die 'No action matched';

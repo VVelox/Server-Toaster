@@ -65,12 +65,12 @@ sub new {
 
 	# set the default output dir if non is specified
 	if ( !defined( $opts{output} ) ) {
-		$opts{output} = catdir( $opts{dir},  'output' );
+		$opts{output} = catdir( $opts{dir}, 'output' );
 	}
 
 	# set the default template dir if non is specified
 	if ( !defined( $opts{templates} ) ) {
-		$opts{templates} = catdir($opts{dir} , 'templates');
+		$opts{templates} = catdir( $opts{dir}, 'templates' );
 	}
 
 	# init the object
@@ -85,7 +85,7 @@ sub new {
 	return $self;
 }
 
-=head2 get_files_module
+=head2 get_files
 
 Fetches a list of templates a module uses.
 
@@ -97,27 +97,61 @@ and the value being the full path to the file.
 sub get_files {
 	my ($self) = @_;
 
-	my @files=$self->get_files_module;
+	my @files = $self->get_files_module;
 
 	my $share_dir = dist_dir('Server-Toaster');
 
 	my %to_return;
 	foreach my $file (@files) {
-		my @split_path=split(/\//, $file);
-		$to_return{$file}={
-						   rel=>catfile(@split_path),
-						   share=>catfile($share_dir, @split_path),
-						   };
+		my @split_path = split( /\//, $file );
+		$to_return{$file} = {
+			rel   => catfile(@split_path),
+			share => catfile( $share_dir, @split_path ),
+		};
 
-		my $use_test=catfile( $self->{templates}, @split_path );
-		if (-f $use_test  ) {
-			$to_return{$file}{use}=$use_test;
-		}else {
-			$to_return{$file}{use}=$to_return{$file}{share};
+		my $use_test = catfile( $self->{templates}, @split_path );
+		if ( -f $use_test ) {
+			$to_return{$file}{use} = $use_test;
+		}
+		else {
+			$to_return{$file}{use} = $to_return{$file}{share};
 		}
 	}
 
 	return %to_return;
+}
+
+=head2 get_template
+
+Fetches a specified template.
+
+=cut
+
+sub get_template{
+	my ($self, $template) = @_;
+
+	if (!defined( $template ) ) {
+		die( 'No template specified' );
+	}
+
+	my %files=$self->get_files;
+
+	if (!defined( $files{$template} )) {
+		die( '"'.$template.'" is not a known template' );
+	}
+
+	my $to_use=$files{$template}{use};
+
+	my $template_data='';
+
+	my $fh;
+	open( $fh, '<', $to_use) or die( $! );
+	while (<$fh>) {
+		$template_data=$template_data.$_;
+	}
+	close( $fh );
+
+	return $template_data;
 }
 
 =head1 AUTHOR

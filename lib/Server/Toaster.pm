@@ -194,6 +194,39 @@ sub get_files {
 	return %returned;
 }
 
+=head2 get_template
+
+
+=cut
+
+sub get_template {
+	my ( $self, $module, $template ) = @_;
+
+	# make sure we have a module defined
+	if ( !defined($module) ) {
+		die 'No module specified';
+	}
+
+	my $to_return;
+	my $to_eval
+		= 'use  Server::Toaster::Modules::'
+		. $module . '; '
+		. 'my $st_module=Server::Toaster::Modules::'
+		. $module
+		. '->new('.
+		'dir=>$self->{dir}, '
+		. 'output=>$self->{output}, '
+		. 'templates=>$self->{templates} );'
+		. '$to_return=$st_module->get_template( $template );';
+	eval($to_eval);
+	if ($@) {
+		print "Evaled...  ".$to_eval."\n";
+		die "Eval failed... ".$@;
+	}
+
+	return $to_return;
+}
+
 =head1 AUTHOR
 
 Zane C. Bowers-Hadley, C<< <vvelox at vvelox.net> >>

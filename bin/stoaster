@@ -1,0 +1,37 @@
+#!/usr/bin/env perl
+#
+#This software is Copyright (c) 2021 by Zane C. Bowers-Hadley.
+#
+#This is free software, licensed under:
+#
+#  The Artistic License 2.0 (GPL Compatible)
+
+use strict;
+use warnings;
+use Server::Toaster;
+use Getopt::Long qw(:config pass_through);
+use Data::Dumper;
+
+my $stoaster_dir;
+my $templates_dir;
+my $output_dir;
+my $module;
+my $action;
+GetOptions(
+	's=s' => \$stoaster_dir,
+	't=s' => \$templates_dir,
+	'o=s' => \$output_dir,
+	'm=s' => \$module,
+	'a=s' => \$action,
+);
+
+my $stoaster = Server::Toaster->new(
+	dir       => $stoaster_dir,
+	templates => $templates_dir,
+	output    => $output_dir,
+);
+
+if ($action eq 'get_files') {
+	my %returned=$stoaster->get_files($module);
+	print Dumper( \%returned );
+}

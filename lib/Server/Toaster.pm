@@ -49,7 +49,6 @@ This initiates the module.
 $templates and $output will be created as needed, but $dir must
 exist upon module init or it will die.
 
-
 =cut
 
 sub new {
@@ -75,12 +74,14 @@ sub new {
 		$opts{templates} = $opts{dir} . '/templates';
 	}
 
+	my %defaults = Server::Toaster::Defaults->get;
+
 	# init the object
 	my $self = {
 		dir       => $opts{dir},
 		output    => $opts{output},
-				templates => $opts{templates},
-				defaults=>Server::Toaster::Defaults->get,
+		templates => $opts{templates},
+		defaults  => \%defaults,
 		share     => dist_dir('Server-Toaster'),
 	};
 	bless $self;
@@ -110,39 +111,44 @@ sub fill_in {
 	my ( $self, %opts ) = @_;
 
 	# make sure we have a module specified
-	if (!defined( $opts{module} )) {
-		die( 'No module defined' );
+	if ( !defined( $opts{module} ) ) {
+		die('No module defined');
 	}
 
 	# make sure we have a hostname
-	if (!defined( $opts{hostname} )) {
-		die( 'No hostname defined' );
+	if ( !defined( $opts{hostname} ) ) {
+		die('No hostname defined');
 	}
 
 	# make sure we have a config to use
-	if (!defined( $opts{config} )) {
-		die( 'No config defined' );
+	if ( !defined( $opts{config} ) ) {
+		die('No config defined');
 	}
 
 	# do a very basic check to make sure we have something that appears to atleast be sane
 	# for the name of the module
-	if ($opts{module}!~/^[A-Za-z0-9\_\:]+$/) {
-		die('"'.$opts{module}.'" does not appear to be a valid module name');
+	if ( $opts{module} !~ /^[A-Za-z0-9\_\:]+$/ ) {
+		die( '"' . $opts{module} . '" does not appear to be a valid module name' );
 	}
 
-	my $merger=Hash::Merge->new('LEFT_PRECEDENT');
+	my $merger = Hash::Merge->new('LEFT_PRECEDENT');
 
-	my $config=$merger->merge( $opts{config}, $self->{defaults} );
+	my $config = $merger->merge( $opts{config}, $self->{defaults} );
 
-	my $to_eval='use  Server::Toaster::Modules::'.$opts{module}.'; '.
-	'my $st_module=Server::Toaster::Modules::'.$opts{module}.'->new(',
-	'dir=>$self->{dir}, '.
-	'output=>$self->{output}, '.
-	'templates=>$self->{templates} );'.
-	'$st_module->fill_in(%opts);';
+	my $to_eval
+		= 'use  Server::Toaster::Modules::'
+		. $opts{module} . '; '
+		. 'my $st_module=Server::Toaster::Modules::'
+		. $opts{module}
+		. '->new('.
+		'dir=>$self->{dir}, '
+		. 'output=>$self->{output}, '
+		. 'templates=>$self->{templates} );'
+		. '$st_module->fill_in(%opts);';
+
+	eval($to_eval);
 
 	
-
 }
 
 =head2 get_files
@@ -161,7 +167,7 @@ Sever::Toaster::Modules. So 'Sever::Toaster::Modules::Apache' becomes
 =cut
 
 sub get_files {
-	my ( $blank, $module ) = @_;
+	my ( $self, $module ) = @_;
 
 	# make sure we have a module defined
 	if ( !defined($module) ) {
@@ -170,12 +176,20 @@ sub get_files {
 
 	my %returned;
 	my $to_eval
-		= 'use Server::Toaster::Modules::'
+		= 'use  Server::Toaster::Modules::'
+		. $module . '; '
+		. 'my $st_module=Server::Toaster::Modules::'
 		. $module
-		. '; %returned=Server::Toaster::Modules::'
-		. $module
-		. '->get_files;';
-	eval( $to_eval );
+		. '->new('.
+		'dir=>$self->{dir}, '
+		. 'output=>$self->{output}, '
+		. 'templates=>$self->{templates} );'
+		. '%returned=$st_module->get_files;';
+	eval($to_eval);
+	if ($@) {
+		print "Evaled...  ".$to_eval."\n";
+		die "Eval failed... ".$@;
+	}
 
 	return %returned;
 }

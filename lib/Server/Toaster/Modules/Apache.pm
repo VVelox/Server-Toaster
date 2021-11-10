@@ -3,11 +3,12 @@ package Server::Toaster::Modules::Apache;
 use 5.006;
 use strict;
 use warnings;
-use base 'Server::Toaster::Modules::Base';
+use Moose;
+extends 'Server::Toaster::Modules::Base';
 
 =head1 NAME
 
-Server::Toaster::Modules::Apache - Apache helper for Server::Toaster
+Server::Toaster::Modules::Apache - Apache module for Server::Toaster
 
 =head1 VERSION
 
@@ -49,24 +50,24 @@ sub fill_in {
 	my ( $self, %opts ) = @_;
 
 	# make sure we have a hostname
-	if (!defined( $opts{hostname} )) {
-		die( 'No hostname defined' );
+	if ( !defined( $opts{hostname} ) ) {
+		die('No hostname defined');
 	}
 
 	# make sure we have a config to use
-	if (!defined( $opts{config} )) {
-		die( 'No config defined' );
+	if ( !defined( $opts{config} ) ) {
+		die('No config defined');
 	}
 
-	my $vars={
-			  hostname=>$opts{hostname},
-			  d=>Server::Toaster::Defaults->get,
-			  c=>%opts{config},
-			  }
+	my $vars = {
+		hostname => $opts{hostname},
+		d        => Server::Toaster::Defaults->get,
+		c        => %opts{config},
+	};
 
 }
 
-=head2 get_files
+=head2 get_files_module
 
 Fetches a list of templates a module uses.
 
@@ -75,18 +76,11 @@ and the value being the full path to the file.
 
 =cut
 
-sub get_files {
-	my ( $self ) = @_;
-
-	my $dir=dist_dir('Server-Toaster');
-	
-	my %returned=(
-				  'Apache/domain.tt'=>$dir.'/Apache/domain.tt',
-				  'Apache/httpd.conf.tt'=>$dir.'/Apache/httpd.conf.tt',
-				  'Apache/doc_root.conf.tt'=>$dir.'/Apache/doc_root.conf.tt',
-				  );
-
-	return %returned;
+sub get_files_module {
+	return (
+			'Apache/domain.tt',
+			'Apache/httpd.conf.tt'
+			);
 }
 
 =head1 AUTHOR

@@ -6,6 +6,8 @@ use warnings;
 use Template;
 use Server::Toaster::Defaults;
 use File::ShareDir ':ALL';
+use File::Spec::Functions;
+use Moose;
 
 =head1 NAME
 
@@ -28,8 +30,6 @@ Perhaps a little code snippet.
     use Server::Toaster::Modules::Apache;
     
     my $st = Server::Toaster->new();
-    
-    
 
 =head1 METHODS
 
@@ -49,7 +49,6 @@ This initiates the module.
 $templates and $output will be created as needed, but $dir must
 exist upon module init or it will die.
 
-
 =cut
 
 sub new {
@@ -67,12 +66,12 @@ sub new {
 
 	# set the default output dir if non is specified
 	if ( !defined( $opts{output} ) ) {
-		$opts{output} = $opts{dir} . '/output';
+		$opts{output} = catdir( $opts{dir},  'output' );
 	}
 
 	# set the default template dir if non is specified
 	if ( !defined( $opts{templates} ) ) {
-		$opts{templates} = $opts{dir} . '/templates';
+		$opts{templates} = catdir($opts{dir} , 'templates');
 	}
 
 	# init the object
@@ -87,42 +86,7 @@ sub new {
 	return $self;
 }
 
-=head2 fill_in
-
-This filles in the templates.
-
-The required values are as below.
-
-    hostname - The hostname of the system being processed.
-    
-    config - The config hash ref for the use with filling the templates.
-
-This will die upon error.
-
-=cut
-
-sub fill_in {
-	my ( $self, %opts ) = @_;
-
-	# make sure we have a hostname
-	if (!defined( $opts{hostname} )) {
-		die( 'No hostname defined' );
-	}
-
-	# make sure we have a config to use
-	if (!defined( $opts{config} )) {
-		die( 'No config defined' );
-	}
-
-	my $vars={
-			  hostname=>$opts{hostname},
-			  d=>Server::Toaster::Defaults->get,
-			  c=>%opts{config},
-			  }
-
-}
-
-=head2 get_files
+=head2 get_files_module
 
 Fetches a list of templates a module uses.
 
@@ -132,17 +96,29 @@ and the value being the full path to the file.
 =cut
 
 sub get_files {
-	my ( $self ) = @_;
+	my ($self) = @_;
 
-	my $dir=dist_dir('Server-Toaster');
-	
-	my %returned=(
-				  'Apache/domain.tt'=>$dir.'/Apache/domain.tt',
-				  'Apache/httpd.conf.tt'=>$dir.'/Apache/httpd.conf.tt',
-				  'Apache/doc_root.conf.tt'=>$dir.'/Apache/doc_root.conf.tt',
-				  );
+	my @files=$self->get_files_module;
 
-	return %returned;
+	my $share_dir = dist_dir('Server-Toaster');
+
+	my %to_return;
+	foreach my $file (@files) {
+		my @split_path=split(/\//, $file);
+		$to_return{$file}={
+						   rel=>catfile(@split_path),
+						   share=>catfile($share_dir, @split_path),
+						   };
+
+		my $use_test=catfile( $self->{templates}, @split_path );
+		if (-f $use_test  ) {
+			$to_return{$file}{use}=$use_test;
+		}else {
+			$to_return{$file}{use}=$to_return{$file}{share};
+		}
+	}
+
+	return %to_return;
 }
 
 =head1 AUTHOR

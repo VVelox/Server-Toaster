@@ -3,8 +3,7 @@ package Server::Toaster::Modules::Apache;
 use 5.006;
 use strict;
 use warnings;
-use Moose;
-extends 'Server::Toaster::Modules::Base';
+use base 'Server::Toaster::Modules::Base';
 
 =head1 NAME
 

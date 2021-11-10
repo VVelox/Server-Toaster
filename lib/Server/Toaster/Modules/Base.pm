@@ -7,7 +7,6 @@ use Template;
 use Server::Toaster::Defaults;
 use File::ShareDir ':ALL';
 use File::Spec::Functions;
-use Moose;
 
 =head1 NAME
 
@@ -52,7 +51,7 @@ exist upon module init or it will die.
 =cut
 
 sub new {
-	my ( $blank, %opts ) = @_;
+	my ( $class, %opts ) = @_;
 
 	# set the default dir if non is specified
 	if ( !defined( $opts{dir} ) ) {
@@ -81,7 +80,7 @@ sub new {
 		templates => $opts{templates},
 		share     => dist_dir('Server-Toaster'),
 	};
-	bless $self;
+	bless $self, $class;
 
 	return $self;
 }

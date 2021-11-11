@@ -151,6 +151,16 @@ sub fill_in {
 	
 }
 
+=head2 get_defaults
+
+=cut
+
+sub get_defaults{
+	my ( $self ) = @_;
+
+	return $self->{defaults}
+}
+
 =head2 get_files
 
 Fetches a list of templates a module uses.

@@ -11,6 +11,14 @@ use warnings;
 use Server::Toaster;
 use Getopt::Long qw(:config pass_through);
 use Data::Dumper;
+use TOML qw(from_toml to_toml);;
+use JSON;
+use YAML qw(Dump);
+
+my $version = '0.0.1';
+
+# make the output consistent
+$Data::Dumper::Sortkeys = 1;
 
 my $stoaster_dir;
 my $templates_dir;
@@ -18,29 +26,78 @@ my $output_dir;
 my $module;
 my $action;
 my $template;
+my $help;
+# fuck JSON, but in this case it does print everything in a easier to read fashion :(
+my $val_print = 'json';
 GetOptions(
-	's=s' => \$stoaster_dir,
-	'T=s' => \$templates_dir,
-	'o=s' => \$output_dir,
-	'm=s' => \$module,
-	'a=s' => \$action,
-	't=s' => \$template,
+	's=s'  => \$stoaster_dir,
+	'T=s'  => \$templates_dir,
+	'o=s'  => \$output_dir,
+	'm=s'  => \$module,
+	'a=s'  => \$action,
+	't=s'  => \$template,
+	'vp=s' => \$val_print,
+	'h'    => \$help,
+	'help' => \$help,
 );
+
+#make sure val_print, --vp, is something valid
+my %val_print_test=(
+					toml=>1,
+					json=>1,
+					dump=>1,
+					yaml=>1,
+					);
+if (!defined( $val_print_test{$val_print} )) {
+	die('"'.$val_print.'" is not a valid value print type');
+}
+
+# print help info if asked
+if ($help) {
+
+	print "stoaster v" . $version . '
+
+
+-s <dir>     Server Toaster directory.
+-T <dir>     Template directory.
+-o <dir>     Output directory.
+-m <mod>     Module to use.
+-a <action>  Action to perform.
+-h           Print this.
+--help       Print this.
+
+
+Default Directories
+-s stoaster
+-T $opts{s}/Templates
+-T $opts{o}/output
+';
+	exit 255;
+}
 
 # make sure we have an action
 if ( !defined($action) ) {
 	die 'Np action defined via -a';
 }
 
+# init the stoaster object
 my $stoaster = Server::Toaster->new(
 	dir       => $stoaster_dir,
 	templates => $templates_dir,
 	output    => $output_dir,
 );
 
+# print the requested template if asked
 if ( $action eq 'get_files' ) {
+	# make sure we have a module specified
+	if (!defined($module)) {
+		die('No module specified. Please use the -m switch');
+	}
+
+	# get the varius templates a module has
 	my %returned = $stoaster->get_files($module);
 
+	# print the templates a module uses
 	foreach my $template ( keys(%returned) ) {
 		print $template
 			. "\n      use => "
@@ -52,10 +109,45 @@ if ( $action eq 'get_files' ) {
 	exit 0;
 }
 
+# print a specified template
 if ( $action eq 'get_template' ) {
-	my $template_data = $stoaster->get_template( $module, $template );
+	# make sure we have a module specified
+	if (!defined($module)) {
+		die('No module specified. Please use the -m switch');
+	}
 
+	# make sure we have a template specified
+	if ( !defined($template) ) {
+		die('Please specify a template using -t');
+	}
+
+	# get the template and print it
+	my $template_data = $stoaster->get_template( $module, $template );
 	print $template_data;
+
+	exit 0;
+}
+
+# get the default settings and print them
+if ( $action eq 'get_defaults' ) {
+	my $defaults = $stoaster->get_defaults;
+
+	$Data::Dumper::Sortkeys = 1;
+
+	# check the specified value print method and print it using that
+	# make sure all keys are sorted for the sake of sanity
+	if ($val_print eq 'dump') {
+		print Dumper($defaults);
+	}elsif ($val_print eq 'toml') {
+		print to_toml($defaults);
+	}elsif ($val_print eq 'json') {
+		my $json=JSON->new;
+		$json->pretty(1);
+		$json->canonical(1);
+		print $json->encode( $defaults );
+	}elsif ($val_print eq 'yaml') {
+		print Dump($defaults);
+	}
 
 	exit 0;
 }
